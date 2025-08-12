@@ -369,3 +369,17 @@ class Generator(Module):
             config.pop("language_model"),
         )
         return cls(language_model=language_model, **config)
+
+class Generator:
+    def __init__(
+        self,
+        language_model=None,
+        teacher_language_model=None,
+        student_language_model=None,
+        training=False,
+        **kwargs
+    ):
+        self.language_model = language_model
+        self.teacher_language_model = teacher_language_model
+        self.student_language_model = student_language_model
+        self.training = training
