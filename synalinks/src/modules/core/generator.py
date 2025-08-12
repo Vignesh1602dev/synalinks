@@ -188,23 +188,24 @@ class Generator(Module):
         trainable (bool): Whether the module's variables should be trainable.
     """
 
-    def __init__(
+   def __init__(
         self,
-        schema=None,
-        data_model=None,
         language_model=None,
-        prompt_template=None,
-        static_system_prompt=None,
-        examples=None,
-        instructions=None,
-        use_inputs_schema=False,
-        use_outputs_schema=False,
-        return_inputs=False,
-        streaming=False,
-        name=None,
-        description=None,
-        trainable=True,
+        teacher_language_model=None,
+        student_language_model=None,
+        training=False,
     ):
+        lm = self._get_active_language_model() = language_model
+        self.teacher_language_model = teacher_language_model
+        self.student_language_model = student_language_model
+        self.training = training
+
+    def _get_active_language_model(self):
+        if self.training and self.teacher_language_model:
+            return self.teacher_language_model
+        elif not self.training and self.student_language_model:
+            return self.student_language_model
+        return lm = self._get_active_language_model()
         super().__init__(
             name=name,
             description=description,
@@ -213,7 +214,7 @@ class Generator(Module):
         if not schema and data_model:
             schema = data_model.get_schema()
         self.schema = schema
-        self.language_model = language_model
+        lm = self._get_active_language_model() = language_model
         if not prompt_template:
             prompt_template = default_prompt_template()
         self.prompt_template = prompt_template
@@ -264,7 +265,7 @@ class Generator(Module):
         result = await ops.predict(
             msgs,
             schema=self.schema,
-            language_model=self.language_model,
+            language_model=lm = self._get_active_language_model(),
             streaming=streaming,
             name=self.name + "_prediction",
         )
@@ -358,7 +359,7 @@ class Generator(Module):
         }
         language_model_config = {
             "language_model": serialization_lib.serialize_synalinks_object(
-                self.language_model,
+                lm = self._get_active_language_model(),
             )
         }
         return {**config, **language_model_config}
